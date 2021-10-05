@@ -12,6 +12,15 @@
 #include <sbi/riscv_asm.h>
 #include <sbi/sbi_console.h>
 
+
+unsigned long sbi_sm_nvm_create(unsigned long eid, uintptr_t size){
+  unsigned long ret;
+  sbi_printf("[SM] Im in sbi_sm_nvm_create, received addr 0x%lx and size 0x%lx \n", eid, size);
+  ret = nvm_create(eid, size);
+  return ret;
+
+}
+
 unsigned long sbi_sm_create_enclave(unsigned long* eid, uintptr_t create_args)
 {
   struct keystone_sbi_create create_args_local;

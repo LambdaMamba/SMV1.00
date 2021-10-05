@@ -66,6 +66,11 @@ static int sbi_ecall_keystone_enclave_handler(unsigned long extid, unsigned long
       retval = sbi_sm_exit_enclave((struct sbi_trap_regs*) regs, regs->a0);
       __builtin_unreachable();
       break;
+    case SBI_SM_NVM_CREATE:
+      sbi_printf("[SM] in SBI_SM_NVM_CREATE \n");
+      retval = sbi_sm_nvm_create(regs->a0, regs->a1);
+      break;
+
     case SBI_SM_CALL_PLUGIN:
       retval = sbi_sm_call_plugin(regs->a0, regs->a1, regs->a2, regs->a3);
       break;

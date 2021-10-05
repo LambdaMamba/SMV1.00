@@ -24,6 +24,10 @@ extern void save_host_regs(void);
 extern void restore_host_regs(void);
 extern byte dev_public_key[PUBLIC_KEY_SIZE];
 
+uintptr_t enclavebase;
+size_t enclavesize;
+enclave_id globaleid;
+
 /****************************
  *
  * Enclave utility functions
@@ -335,10 +339,31 @@ static int is_create_args_valid(struct keystone_sbi_create* args)
  *
  * This may fail if: it cannot allocate PMP regions, EIDs, etc
  */
+
+
+unsigned long nvm_create(unsigned long eid, uintptr_t nvmsize){
+
+  sbi_printf("[SM] Im at nvm_create right now\n");
+  // int nvmregion;
+  // ret = SBI_ERR_SM_ENCLAVE_PMP_FAILURE;
+  // if(pmp_region_init_atomic(enclavebase + enclavesize, nvmsize, PMP_PRI_ANY, &nvmregion, 0))
+  //   goto free_encl_idx;
+
+  // enclaves[eid].regions[1].pmp_rid = shared_region;
+  return 1;
+
+
+
+}
+
+
+
 unsigned long create_enclave(unsigned long *eidptr, struct keystone_sbi_create create_args)
 {
   /* EPM and UTM parameters */
+  sbi_printf("[SM] CREATING THE ENCLAVE RIGHT NOW\n");
   uintptr_t base = create_args.epm_region.paddr;
+
   size_t size = create_args.epm_region.size;
   uintptr_t utbase = create_args.utm_region.paddr;
   size_t utsize = create_args.utm_region.size;
@@ -346,6 +371,10 @@ unsigned long create_enclave(unsigned long *eidptr, struct keystone_sbi_create c
   enclave_id eid;
   unsigned long ret;
   int region, shared_region;
+
+
+  enclavebase = base;
+  enclavesize = size;
 
   /* Runtime parameters */
   if(!is_create_args_valid(&create_args))
@@ -385,6 +414,9 @@ unsigned long create_enclave(unsigned long *eidptr, struct keystone_sbi_create c
 
   // initialize enclave metadata
   enclaves[eid].eid = eid;
+
+  globaleid = eid;
+
 
   enclaves[eid].regions[0].pmp_rid = region;
   enclaves[eid].regions[0].type = REGION_EPM;
