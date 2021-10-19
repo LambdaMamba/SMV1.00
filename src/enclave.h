@@ -50,6 +50,7 @@ enum enclave_region_type{
   REGION_EPM,
   REGION_UTM,
   REGION_OTHER,
+  REGION_NVM,
 };
 
 struct enclave_region

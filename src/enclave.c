@@ -27,6 +27,9 @@ extern byte dev_public_key[PUBLIC_KEY_SIZE];
 uintptr_t enclavebase;
 size_t enclavesize;
 enclave_id globaleid;
+enclave_id eid;
+
+
 
 /****************************
  *
@@ -49,6 +52,8 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
   swap_prev_state(&enclaves[eid].threads[0], regs, 1);
   swap_prev_mepc(&enclaves[eid].threads[0], regs, regs->mepc);
   swap_prev_mstatus(&enclaves[eid].threads[0], regs, regs->mstatus);
+
+  sbi_printf("[MY_SM] Context switching to enclave\n");
 
   uintptr_t interrupts = 0;
   csr_write(mideleg, interrupts);
@@ -82,8 +87,15 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
   // set PMP
   osm_pmp_set(PMP_NO_PERM);
   int memid;
+  // if(enclaves[eid].regions[2].type != REGION_INVALID){
+  //    sbi_printf("region is valid\n");
+  // }else{
+  //     sbi_printf("region is invalid\n");
+  // }
+
   for(memid=0; memid < ENCLAVE_REGIONS_MAX; memid++) {
     if(enclaves[eid].regions[memid].type != REGION_INVALID) {
+     // sbi_printf("Valid eid is %d, memid is %d\n", eid, memid);
       pmp_set_keystone(enclaves[eid].regions[memid].pmp_rid, PMP_ALL_PERM);
     }
   }
@@ -96,11 +108,14 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
 static inline void context_switch_to_host(struct sbi_trap_regs *regs,
     enclave_id eid,
     int return_on_resume){
+  sbi_printf("[MY_SM] Context switching to host\n");
 
   // set PMP
   int memid;
   for(memid=0; memid < ENCLAVE_REGIONS_MAX; memid++) {
     if(enclaves[eid].regions[memid].type != REGION_INVALID) {
+      //sbi_printf("[MY_SM] For Enclave ID %d and Mem ID %d Calling pmp_set() from context_switch_to_host()\n", eid, memid);
+
       pmp_set_keystone(enclaves[eid].regions[memid].pmp_rid, PMP_NO_PERM);
     }
   }
@@ -341,9 +356,25 @@ static int is_create_args_valid(struct keystone_sbi_create* args)
  */
 
 
-unsigned long nvm_create(unsigned long eid, uintptr_t nvmsize){
+unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
-  sbi_printf("[SM] Im at nvm_create right now\n");
+  int nvm_region;
+  uintptr_t base = 0xc0000000; //tmp base
+
+  sbi_printf("[SM] At nvm_create() right now\n");
+    if(pmp_region_init_atomic(base, nvmsize, PMP_PRI_ANY, &nvm_region, 0)){
+      pmp_region_free_atomic(nvm_region);
+    } else {
+      sbi_printf("Successfully created a NVM PMP Entry\n");
+
+    }
+
+  enclaves[eid].regions[2].pmp_rid = nvm_region;
+  enclaves[eid].regions[2].type = REGION_NVM;
+
+
+  if(enclaves[eid].regions[2].type != REGION_INVALID) sbi_printf("region is valid\n");
+
   // int nvmregion;
   // ret = SBI_ERR_SM_ENCLAVE_PMP_FAILURE;
   // if(pmp_region_init_atomic(enclavebase + enclavesize, nvmsize, PMP_PRI_ANY, &nvmregion, 0))
@@ -368,7 +399,6 @@ unsigned long create_enclave(unsigned long *eidptr, struct keystone_sbi_create c
   uintptr_t utbase = create_args.utm_region.paddr;
   size_t utsize = create_args.utm_region.size;
 
-  enclave_id eid;
   unsigned long ret;
   int region, shared_region;
 
