@@ -241,10 +241,8 @@ int pmp_set_keystone(int region_idx, uint8_t perm)
 
   pmpaddr = region_pmpaddr_val(region_idx);
 
-  sbi_printf("pmp_set() [hart %d]: reg[%d], mode[%s], range[0x%lx-0x%lx], perm[0x%x]\r\n",
-        current_hartid(), reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"),
-        region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx), perm);
-  //sbi_printf("  pmp[%d] = pmpaddr: 0x%lx, pmpcfg: 0x%lx\r\n", reg_idx, pmpaddr, pmpcfg);
+  //sbi_printf("pmp_set() [hart %d]: reg[%d], mode[%s], range[0x%lx-0x%lx], perm[0x%x]\r\n", current_hartid(), reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"), region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx), perm);
+  ////sbi_printf("  pmp[%d] = pmpaddr: 0x%lx, pmpcfg: 0x%lx\r\n", reg_idx, pmpaddr, pmpcfg);
 
   int n=reg_idx;
 
@@ -354,9 +352,7 @@ static int tor_region_init(uintptr_t start, uint64_t size, enum pmp_priority pri
   // initialize the region
   region_init(region_idx, start, size, PMP_A_TOR, allow_overlap, reg_idx);
 
-  sbi_printf("[MY_SM] tor_region_init() reg[%d], mode[%s], range[0x%lx-0x%lx]\r\n",
-         reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"),
-         region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx));
+  //sbi_printf("[MY_SM] tor_region_init() reg[%d], mode[%s], range[0x%lx-0x%lx]\r\n", reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"), region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx));
 
   SET_BIT(region_def_bitmap, region_idx);
   SET_BIT(reg_bitmap, reg_idx);
@@ -420,9 +416,7 @@ static int napot_region_init(uintptr_t start, uint64_t size, enum pmp_priority p
   // initialize the region
   region_init(region_idx, start, size, PMP_A_NAPOT, allow_overlap, reg_idx);
 
-  sbi_printf("[MY_SM] napot_region_init(): reg[%d], mode[%s], range[0x%lx-0x%lx] \n",
-         reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"),
-         region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx));
+  //sbi_printf("[MY_SM] napot_region_init(): reg[%d], mode[%s], range[0x%lx-0x%lx] \n",   reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"),  region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx));
 
   SET_BIT(region_def_bitmap, region_idx);
   SET_BIT(reg_bitmap, reg_idx);

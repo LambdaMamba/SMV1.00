@@ -53,7 +53,7 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
   swap_prev_mepc(&enclaves[eid].threads[0], regs, regs->mepc);
   swap_prev_mstatus(&enclaves[eid].threads[0], regs, regs->mstatus);
 
-  sbi_printf("[MY_SM] Context switching to enclave\n");
+  //sbi_printf("[MY_SM] Context switching to enclave\n");
 
   uintptr_t interrupts = 0;
   csr_write(mideleg, interrupts);
@@ -108,7 +108,7 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
 static inline void context_switch_to_host(struct sbi_trap_regs *regs,
     enclave_id eid,
     int return_on_resume){
-  sbi_printf("[MY_SM] Context switching to host\n");
+  //sbi_printf("[MY_SM] Context switching to host\n");
 
   // set PMP
   int memid;
@@ -361,11 +361,11 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
   int nvm_region;
   uintptr_t base = 0xc0000000; //tmp base
 
-  sbi_printf("[SM] At nvm_create() right now\n");
+  //sbi_printf("[SM] At nvm_create() right now\n");
     if(pmp_region_init_atomic(base, nvmsize, PMP_PRI_ANY, &nvm_region, 0)){
       pmp_region_free_atomic(nvm_region);
     } else {
-      sbi_printf("Successfully created a NVM PMP Entry\n");
+      //sbi_printf("Successfully created a NVM PMP Entry\n");
 
     }
 
@@ -373,7 +373,7 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
   enclaves[eid].regions[2].type = REGION_NVM;
 
 
-  if(enclaves[eid].regions[2].type != REGION_INVALID) sbi_printf("region is valid\n");
+  if(enclaves[eid].regions[2].type != REGION_INVALID) {} //sbi_printf("region is valid\n");
 
   // int nvmregion;
   // ret = SBI_ERR_SM_ENCLAVE_PMP_FAILURE;
