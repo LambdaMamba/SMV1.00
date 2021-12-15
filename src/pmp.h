@@ -19,7 +19,6 @@ enum pmp_priority {
   PMP_PRI_ANY,
   PMP_PRI_TOP,
   PMP_PRI_BOTTOM,
-  PMP_PRI_NEXT,
 };
 
 #define PMP_ALL_PERM  (PMP_W | PMP_X | PMP_R)

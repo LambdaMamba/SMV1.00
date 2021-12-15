@@ -16,9 +16,7 @@
 #include <sbi/sbi_hart.h>
 
 static int sm_init_done = 0;
-static int sm_region_id = 0, nvm_region_id = 0, os_region_id = 0;
-
-static struct free_list free_list_nvm;
+static int sm_region_id = 0, os_region_id = 0;
 
 /* from Sanctum BootROM */
 extern byte sanctum_sm_hash[MDSIZE];
@@ -41,7 +39,6 @@ int osm_pmp_set(uint8_t perm)
 
 int smm_init()
 {
-  sbi_printf("Inside smm_init\n");
   int region = -1;
   int ret = pmp_region_init_atomic(SMM_BASE, SMM_SIZE, PMP_PRI_TOP, &region, 0);
   if(ret)
@@ -49,48 +46,6 @@ int smm_init()
 
   return region;
 }
-
-int nvm_init()
-{
-  sbi_printf("Inside nvm_init\n");
-  sbi_printf("NVM BASE: 0x%x, NVM SIZE: 0x%x\n", NVM_BASE, NVM_SIZE);
-  int region = -1;
-  int ret = pmp_region_init_atomic(NVM_BASE, NVM_SIZE, PMP_PRI_NEXT, &region, 0);
-  if(ret)
-    return -1;
-
-  return region;
-}
-
-int nvm_free_list_init(){
-  uintptr_t head = NVM_BASE;
-  uintptr_t end = head + NVM_SIZE;
-  uintptr_t now;
-  uintptr_t prev;
-
-
-  for(now = head; now < end; now += NVM_BLOCK_SIZE){
-    if(!FREELIST_EMPTY(free_list_nvm)){
-      sbi_printf("[SM] Adding 0x%lx to free list, block # is %d\n", now,  free_list_nvm.count);
-      prev = free_list_nvm.tail;
-      *((uintptr_t*)prev) = now;
-    } else {
-      sbi_printf("[SM] Freelist is empty\n");
-      free_list_nvm.head = now;
-    }
-    
-    *((uintptr_t*)now) = 0;
-    free_list_nvm.tail = now;
-
-    free_list_nvm.count++;   
-    
-  }
-  sbi_printf("[SM] Finished initializing NVM free list, free NVM blocks: %d\n", free_list_nvm.count);
-
-  return 1;
-}
-
-
 
 int osm_init()
 {
@@ -101,8 +56,6 @@ int osm_init()
 
   return region;
 }
-
-
 
 void sm_sign(void* signature, const void* data, size_t len)
 {
@@ -171,22 +124,12 @@ void sm_init(bool cold_boot)
 
     sbi_ecall_register_extension(&ecall_keystone_enclave);
 
-    sbi_printf("[SM] Initializing SM\n");
     sm_region_id = smm_init();
     if(sm_region_id < 0) {
       sbi_printf("[SM] intolerable error - failed to initialize SM memory");
       sbi_hart_hang();
     }
-    
-    sbi_printf("[SM] Initializing NVM\n");
 
-    nvm_region_id = nvm_init();
-    if(nvm_region_id < 0){
-      sbi_printf("[SM] intolerable error - failed to initialize NVM memory");
-      sbi_hart_hang();
-    }
-
-    sbi_printf("[SM] Initializing OSM\n");
     os_region_id = osm_init();
     if(os_region_id < 0) {
       sbi_printf("[SM] intolerable error - failed to initialize OS memory");
@@ -216,13 +159,7 @@ void sm_init(bool cold_boot)
   /* below are executed by all harts */
   pmp_init();
   pmp_set_keystone(sm_region_id, PMP_NO_PERM);
-  pmp_set_keystone(nvm_region_id, PMP_NO_PERM);
   pmp_set_keystone(os_region_id, PMP_ALL_PERM);
-
-  int res = nvm_free_list_init();
-  if(res){
-    sbi_printf("[SM] NVM init was success\n");
-  }
 
   /* Fire platform specific global init */
   if (platform_init_global() != SBI_ERR_SM_ENCLAVE_SUCCESS) {
