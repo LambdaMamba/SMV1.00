@@ -95,6 +95,7 @@ static void region_init(region_id i,
                         int allow_overlap,
                         pmpreg_id reg_idx)
 {
+  sbi_printf("Inside region_init, addr: 0x%lx, size: 0x%lx, regid: 0x%d \n", addr, size, reg_idx);
   regions[i].addr = addr;
   regions[i].size = size;
   regions[i].addrmode = addrmode;
@@ -241,10 +242,15 @@ int pmp_set_keystone(int region_idx, uint8_t perm)
 
   pmpaddr = region_pmpaddr_val(region_idx);
 
+<<<<<<< Updated upstream
   sbi_printf("pmp_set() [hart %d]: reg[%d], mode[%s], range[0x%lx-0x%lx], perm[0x%x]\r\n",
         current_hartid(), reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"),
         region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx), perm);
   //sbi_printf("  pmp[%d] = pmpaddr: 0x%lx, pmpcfg: 0x%lx\r\n", reg_idx, pmpaddr, pmpcfg);
+=======
+  sbi_printf("pmp_set() [hart %d]: reg[%d], mode[%s], range[0x%lx-0x%lx], perm[0x%x]\r\n", current_hartid(), reg_idx, (region_is_tor(region_idx) ? "TOR":"NAPOT"), region_get_addr(region_idx), region_get_addr(region_idx) + region_get_size(region_idx), perm);
+  ////sbi_printf("  pmp[%d] = pmpaddr: 0x%lx, pmpcfg: 0x%lx\r\n", reg_idx, pmpaddr, pmpcfg);
+>>>>>>> Stashed changes
 
   int n=reg_idx;
 
@@ -305,6 +311,7 @@ int pmp_unset(int region_idx)
 
 int pmp_region_init_atomic(uintptr_t start, uint64_t size, enum pmp_priority priority, region_id* rid, int allow_overlap)
 {
+  sbi_printf("Inside pmp_region_init_atomic now\n ");
   int ret;
   spin_lock(&pmp_lock);
   ret = pmp_region_init(start, size, priority, rid, allow_overlap);
@@ -316,6 +323,8 @@ static int tor_region_init(uintptr_t start, uint64_t size, enum pmp_priority pri
 {
   pmpreg_id reg_idx = -1;
   region_id region_idx = -1;
+
+  sbi_printf("Inside tor_region_init\n");
 
   sm_assert(size);
   sm_assert(!(size & (RISCV_PGSIZE-1)));
@@ -369,6 +378,7 @@ static int tor_region_init(uintptr_t start, uint64_t size, enum pmp_priority pri
 
 static int napot_region_init(uintptr_t start, uint64_t size, enum pmp_priority priority, region_id* rid, int allow_overlap)
 {
+  sbi_printf("Inside napot_region_init\n");
   pmpreg_id reg_idx = -1;
   region_id region_idx = -1;
 
@@ -385,28 +395,47 @@ static int napot_region_init(uintptr_t start, uint64_t size, enum pmp_priority p
 
   //find avaiable pmp region idx
   region_idx = get_free_region_idx();
-  if(region_idx < 0 || region_idx > PMP_MAX_N_REGION)
+  if(region_idx < 0 || region_idx > PMP_MAX_N_REGION){
     PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "Reached the maximum number of PMP regions");
-
+    sbi_printf("Reached the maximum number of PMP regions\n");
+  }
   *rid = region_idx;
 
   switch(priority)
   {
     case(PMP_PRI_ANY): {
+      sbi_printf("PMP_PRI_ANY\n");
       reg_idx = get_free_reg_idx();
-      if(reg_idx < 0)
+      if(reg_idx < 0){
         PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "No available PMP register");
-      if(TEST_BIT(reg_bitmap, reg_idx) || reg_idx >= PMP_N_REG)
+        sbi_printf("No available PMP register\n");
+      }
+      if(TEST_BIT(reg_bitmap, reg_idx) || reg_idx >= PMP_N_REG){
         PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "PMP register unavailable");
+        sbi_printf("PMP register unavailable\n");
+      }
       break;
     }
     case(PMP_PRI_TOP): {
+      sbi_printf("PMP_PRI_TOP\n");
       reg_idx = 0;
-      if(TEST_BIT(reg_bitmap, reg_idx))
+      if(TEST_BIT(reg_bitmap, reg_idx)){
         PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "PMP register unavailable");
+        sbi_printf("PMP register unavailable\n");
+      }
+      break;
+    }
+    case(PMP_PRI_NEXT): {
+      sbi_printf("PMP_PRI_NEXT\n");
+      reg_idx = 1;
+      if(TEST_BIT(reg_bitmap, reg_idx)){
+        PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "PMP register unavailable");
+        sbi_printf("PMP register unavailable\n");
+      }
       break;
     }
     case(PMP_PRI_BOTTOM): {
+      sbi_printf("PMP_PRI_BOTTOM\n");
       /* the bottom register can be used by multiple regions,
        * so we don't check its availability */
       reg_idx = PMP_N_REG - 1;
@@ -456,6 +485,7 @@ int pmp_region_free_atomic(int region_idx)
 
 int pmp_region_init(uintptr_t start, uint64_t size, enum pmp_priority priority, int* rid, int allow_overlap)
 {
+  sbi_printf("Inisde pmp_region_init now\n");
   if(!size)
     PMP_ERROR(SBI_ERR_SM_PMP_REGION_SIZE_INVALID, "Invalid PMP size");
 

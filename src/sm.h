@@ -13,6 +13,16 @@
 #define SMM_BASE  0x80000000
 #define SMM_SIZE  0x200000
 
+
+#define NVM_BASE 0xc0000000
+#define NVM_SIZE 0x1000000
+
+
+#define NVM_BLOCK_SIZE 0x100000
+
+
+#define FREELIST_EMPTY(list) ((list).count == 0 || (list).head == 0)
+
 /* 0-1999 are not used (deprecated) */
 #define FID_RANGE_DEPRECATED      1999
 /* 2000-2999 are called by host */
@@ -109,6 +119,12 @@ struct keystone_sbi_create
 
   struct runtime_va_params_t params;
   unsigned int* eid_pptr;
+};
+
+struct free_list{
+  uintptr_t head;
+  uintptr_t tail;
+  unsigned int count;
 };
 
 int osm_pmp_set(uint8_t perm);
