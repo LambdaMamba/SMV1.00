@@ -128,4 +128,6 @@ struct free_list{
 };
 
 int osm_pmp_set(uint8_t perm);
+
+uintptr_t nvm_free_list_alloc();
 #endif

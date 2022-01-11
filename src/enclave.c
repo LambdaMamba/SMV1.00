@@ -359,15 +359,47 @@ static int is_create_args_valid(struct keystone_sbi_create* args)
 unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
   int nvm_region;
-  uintptr_t base = 0xc0000000; //tmp base
+  uintptr_t firstblock = 0, lastblock = 0;
 
-  sbi_printf("[SM] At nvm_create() right now\n");
-    if(pmp_region_init_atomic(base, nvmsize, PMP_PRI_ANY, &nvm_region, 0)){
-      pmp_region_free_atomic(nvm_region);
-    } else {
-      sbi_printf("Successfully created a NVM PMP Entry\n");
+  uintptr_t end, allocatedsize;
+  
+  int n = nvmsize/NVM_BLOCK_SIZE;
+  long m = nvmsize/NVM_BLOCK_SIZE;
+  uintptr_t remain = 0;
+  remain = m - n;
+  int i;
 
+  int blocks_needed;
+  if(remain == 0){
+    blocks_needed = n;
+  } else if (remain > 0) {
+    blocks_needed = n + 1;
+  }
+
+   sbi_printf("[SM] Need NVM Size of 0x%lx, thus need %d blocks\n", nvmsize, blocks_needed);
+
+
+  for(i=1; i<=blocks_needed; i++){
+    sbi_printf("[SM] Allocating block %d\n", i);
+    uintptr_t ret = nvm_free_list_alloc();
+    if(i==1){
+      firstblock = ret;
     }
+    if(i==blocks_needed){ 
+      lastblock = ret;
+    }
+  }
+  end = lastblock + NVM_BLOCK_SIZE;
+
+  allocatedsize = end - firstblock;
+
+  sbi_printf("[SM] Allocated a total of 0x%lx\n", allocatedsize);
+
+  if(pmp_region_init_atomic(firstblock, allocatedsize, PMP_PRI_ANY, &nvm_region, 0)){
+    pmp_region_free_atomic(nvm_region);
+  } else {
+    sbi_printf("Successfully created a NVM PMP Entry\n");
+  }
 
   enclaves[eid].regions[2].pmp_rid = nvm_region;
   enclaves[eid].regions[2].type = REGION_NVM;

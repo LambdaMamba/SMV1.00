@@ -73,6 +73,7 @@ int nvm_free_list_init(){
     if(!FREELIST_EMPTY(free_list_nvm)){
       sbi_printf("[SM] Adding 0x%lx to free list, block # is %d\n", now,  free_list_nvm.count);
       prev = free_list_nvm.tail;
+      //assert(prev);
       *((uintptr_t*)prev) = now;
     } else {
       sbi_printf("[SM] Freelist is empty\n");
@@ -88,6 +89,26 @@ int nvm_free_list_init(){
   sbi_printf("[SM] Finished initializing NVM free list, free NVM blocks: %d\n", free_list_nvm.count);
 
   return 1;
+}
+
+
+uintptr_t nvm_free_list_alloc(){
+  uintptr_t free_blk;
+  if(FREELIST_EMPTY(free_list_nvm)){
+    sbi_printf("[SM] Free list empty");
+    return -1;
+  } else {
+    free_blk = free_list_nvm.head;
+    //assert(free_blk);
+
+    uintptr_t next = *((uintptr_t*)free_list_nvm.head);
+    free_list_nvm.head = next;
+    free_list_nvm.count--;
+    sbi_printf("[SM] The block 0x%lx is allocated, block count is now 0x%x\n", free_blk, free_list_nvm.count);
+    return free_blk;
+
+  }
+
 }
 
 
