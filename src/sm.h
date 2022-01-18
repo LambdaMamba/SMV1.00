@@ -15,10 +15,10 @@
 
 
 #define NVM_BASE 0xc0000000
-#define NVM_SIZE 0x1000000
+#define NVM_SIZE 0x10000
 
 
-#define NVM_BLOCK_SIZE 0x100000
+#define NVM_BLOCK_SIZE 0x1000
 
 
 #define FREELIST_EMPTY(list) ((list).count == 0 || (list).head == 0)

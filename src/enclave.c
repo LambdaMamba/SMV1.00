@@ -108,7 +108,7 @@ static inline void context_switch_to_enclave(struct sbi_trap_regs* regs,
 static inline void context_switch_to_host(struct sbi_trap_regs *regs,
     enclave_id eid,
     int return_on_resume){
-  sbi_printf("[MY_SM] Context switching to host\n");
+    sbi_printf("[MY_SM] Context switching to host\n");
 
   // set PMP
   int memid;
@@ -369,8 +369,11 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
   remain = m - n;
   int i;
 
+
   int blocks_needed;
-  if(remain == 0){
+  if(nvmsize < NVM_BLOCK_SIZE){
+    blocks_needed = 1;
+  } else if(remain == 0){
     blocks_needed = n;
   } else if (remain > 0) {
     blocks_needed = n + 1;
@@ -393,7 +396,7 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
   allocatedsize = end - firstblock;
 
-  sbi_printf("[SM] Allocated a total of 0x%lx\n", allocatedsize);
+  sbi_printf("[SM] Allocated a total of 0x%lx, 0x%lx - 0x%lx\n", allocatedsize, firstblock, firstblock + allocatedsize);
 
   if(pmp_region_init_atomic(firstblock, allocatedsize, PMP_PRI_ANY, &nvm_region, 0)){
     pmp_region_free_atomic(nvm_region);
@@ -405,7 +408,7 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
   enclaves[eid].regions[2].type = REGION_NVM;
 
 
-  if(enclaves[eid].regions[2].type != REGION_INVALID) sbi_printf("region is valid\n");
+ // if(enclaves[eid].regions[2].type != REGION_INVALID) sbi_printf("region is valid\n");
 
   // int nvmregion;
   // ret = SBI_ERR_SM_ENCLAVE_PMP_FAILURE;

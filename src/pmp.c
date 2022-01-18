@@ -420,7 +420,7 @@ static int napot_region_init(uintptr_t start, uint64_t size, enum pmp_priority p
     }
     case(PMP_PRI_NEXT): {
       sbi_printf("PMP_PRI_NEXT\n");
-      reg_idx = 1;
+      reg_idx = 4; 
       if(TEST_BIT(reg_bitmap, reg_idx)){
         PMP_ERROR(SBI_ERR_SM_PMP_REGION_MAX_REACHED, "PMP register unavailable");
         sbi_printf("PMP register unavailable\n");

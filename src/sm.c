@@ -104,7 +104,7 @@ uintptr_t nvm_free_list_alloc(){
     uintptr_t next = *((uintptr_t*)free_list_nvm.head);
     free_list_nvm.head = next;
     free_list_nvm.count--;
-    sbi_printf("[SM] The block 0x%lx is allocated, block count is now 0x%x\n", free_blk, free_list_nvm.count);
+    sbi_printf("[SM] The block 0x%lx is allocated, block count is now %d\n", free_blk, free_list_nvm.count);
     return free_blk;
 
   }
