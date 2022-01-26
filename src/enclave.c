@@ -398,7 +398,7 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
   sbi_printf("[SM] Allocated a total of 0x%lx, 0x%lx - 0x%lx\n", allocatedsize, firstblock, firstblock + allocatedsize);
 
-  if(pmp_region_init_atomic(firstblock, allocatedsize, PMP_PRI_ANY, &nvm_region, 0)){
+  if(pmp_region_init_atomic(firstblock, allocatedsize, PMP_PRI_ANY, &nvm_region, 1)){
     pmp_region_free_atomic(nvm_region);
   } else {
     sbi_printf("Successfully created a NVM PMP Entry\n");

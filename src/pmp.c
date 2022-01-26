@@ -485,6 +485,7 @@ int pmp_region_init(uintptr_t start, uint64_t size, enum pmp_priority priority, 
   /* overlap detection */
   if (!allow_overlap) {
     if (detect_region_overlap(start, size)) {
+      sbi_printf("Overlap Error\n");
       return SBI_ERR_SM_PMP_REGION_OVERLAP;
     }
   }
