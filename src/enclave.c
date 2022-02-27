@@ -416,7 +416,7 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
   //   goto free_encl_idx;
 
   // enclaves[eid].regions[1].pmp_rid = shared_region;
-  return 1;
+  return allocatedsize;
 
 
 
