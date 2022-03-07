@@ -77,6 +77,7 @@ int nvm_free_list_init(){
       *((uintptr_t*)prev) = now;
     } else {
       sbi_printf("[SM] Freelist is empty\n");
+      sbi_printf("[SM] Adding 0x%lx to free list, block # is %d\n", now,  free_list_nvm.count);
       free_list_nvm.head = now;
     }
     

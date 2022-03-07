@@ -356,7 +356,7 @@ static int is_create_args_valid(struct keystone_sbi_create* args)
  */
 
 
-unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
+unsigned long nvm_create(unsigned long addr, uintptr_t nvmsize){
 
   int nvm_region;
   uintptr_t firstblock = 0, lastblock = 0;
@@ -379,12 +379,16 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
     blocks_needed = n + 1;
   }
 
-   sbi_printf("[SM] Need NVM Size of 0x%lx, thus need %d blocks\n", nvmsize, blocks_needed);
+   sbi_printf("[SM] Need NVM Size of 0x%lx, thus need %d blocks. Requested address is at 0x%lx\n", nvmsize, blocks_needed, addr);
 
 
   for(i=1; i<=blocks_needed; i++){
     sbi_printf("[SM] Allocating block %d\n", i);
     uintptr_t ret = nvm_free_list_alloc();
+    if (ret < 0){
+      sbi_printf("[SM] Block allocation failed \n");
+      return 0;
+    }
     if(i==1){
       firstblock = ret;
     }
@@ -396,16 +400,23 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
   allocatedsize = end - firstblock;
 
-  sbi_printf("[SM] Allocated a total of 0x%lx, 0x%lx - 0x%lx\n", allocatedsize, firstblock, firstblock + allocatedsize);
+  if (firstblock != addr){
+    //manage this case where firstblock is not equal to request address later, as it requires returning both the start address and the allocated size
+    sbi_printf("Allocated block does not start at requested address\n");
+    return 0;
+  } 
 
+  sbi_printf("[SM] Allocated a total of 0x%lx, 0x%lx - 0x%lx\n", allocatedsize, firstblock, firstblock + allocatedsize);
+  
   if(pmp_region_init_atomic(firstblock, allocatedsize, PMP_PRI_ANY, &nvm_region, 1)){
     pmp_region_free_atomic(nvm_region);
   } else {
     sbi_printf("Successfully created a NVM PMP Entry\n");
   }
 
-  enclaves[eid].regions[2].pmp_rid = nvm_region;
-  enclaves[eid].regions[2].type = REGION_NVM;
+
+  enclaves[eid].regions[1].pmp_rid = nvm_region;
+  enclaves[eid].regions[1].type = REGION_NVM;
 
 
  // if(enclaves[eid].regions[2].type != REGION_INVALID) sbi_printf("region is valid\n");
@@ -417,8 +428,6 @@ unsigned long nvm_create(unsigned long num, uintptr_t nvmsize){
 
   // enclaves[eid].regions[1].pmp_rid = shared_region;
   return allocatedsize;
-
-
 
 }
 
